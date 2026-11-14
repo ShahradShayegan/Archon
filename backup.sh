@@ -4,11 +4,14 @@
 # ===============================
 # Linux Automated Backup
 #
-# Version: 1.0.0
+# Version: 1.0.1
 # ===============================
 #
-#
-#
+
+set -Eeuo pipefail
+
+
+
 # ---------- Configuration ----------
 
 
@@ -26,35 +29,104 @@ DATE=$(date +"%Y-%m-%d_%H:%M:%S")
 BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
 
 
-# ---------- Create Backup Directory ----------
 
-mkdir -p "$BACKUP_DIR"
 
+# ---------- Create Log ----------
+
+log() {
+	"[INFO] $1"
+}
 
 # ---------- Validate Source Directories ----------
 
+validate_source() {
+	VALIDATED_DIRS=()
+	for DIR in "${SOURCE_DIRS[@]}"; do
+		if [[ ! -d "$DIR" ]]; then
+			error "Source directiry not found: $DIR"
+			return 1
+		fi
+		
+		REAL_DIR=$(realpatch -e "$DIR")
+		VALIDATED_DIRS+=("$REAL_DIR")
+	done
+}
 
-for DIR in "${SOURCE_DIRS[@]}"; do
-	if [[ ! -d "$DIR" ]]; then
-		echo "ERROR: Sourece directory not found: $DIR"
-		exit 1
-	fi
-done
+
+
+
+# ---------- Create Backup Directory ----------
+
+create_backup_directory() {
+	mkdir -p "$BACKUP_DIR"
+	BACKUP_DIR=$(realpath -e "$BACKUO_DIR")
+}
+
+
+# ---------- Validate Backup Location ----------
+
+validate_backup_location() {
+	for DIR in "${VALIDATED_DIRS[@]}"; do
+		if [[ "$BACKUP_DIR" ==	"$DIR" || "$BACKUP_DIR" == "$DIR/"* ]]; then
+			error "Backup directory is inside asource directory: $DIR"
+			return 1
+		fi
+	done
+}
+
 
 
 # ---------- Create Backup ----------
 
-tar -czf "$BACKUP_FILE" -C / "${SOURCE_DIRS[@]#/}"
+create_backup() {
+	log "Starting backup ..."
+	tar -czf "$BACKUP_ّFILE" -C / -- "${VALIDATED_DIRS[@]#/}"
+	log "Backup archive created."
+}
 
-# ---------- Check Backup Result ----------
 
-if [[ $? -eq 0 ]]; then
-	echo "Backup completed successfully!"
-	echo "Backupfile: $BACKUP_FILE"
-else
-	echo "ERROR:  backup failed!"
-	exit 1
-fi
+
+# ---------- Verify Backup ----------
+
+verify_backup() {
+	log "Verifying backup archive ..."
+	if [[ ! -s "$BACKUP_FILE" ]]; then
+		error "Backup archive is missing or empty."
+		return 1
+	fi
+
+	if tar -tzf "$BACKUP_FILE" > /dev/null; then
+		log "Backup archive verified successfully."
+
+	else
+		log "Backup archive verified failed."
+		return 1
+	fi
+}
+
+
+
+
+
+# ---------- Main ----------
+main() {
+	log "Starting Linux Backup System."
+	
+	validate_sources
+	create_backup_directory
+	validate_backup_location
+	create_backup
+	varify_backup
+
+	log "Backup Completed successfully!"
+	log "Backup fille: $BACKUP_FILE"
+}
+
+
+
+
+
+main
 
 
 
