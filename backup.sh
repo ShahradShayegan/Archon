@@ -46,6 +46,11 @@ validate_source() {
 			error "Source directiry not found: $DIR"
 			return 1
 		fi
+
+		if [[ "$DIR" == "/" ]]; then
+			error "Backing up the root directory is not supported."
+			return 1
+		fi
 		
 		REAL_DIR=$(realpatch -e "$DIR")
 		VALIDATED_DIRS+=("$REAL_DIR")
