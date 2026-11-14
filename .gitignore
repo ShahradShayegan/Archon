@@ -1,0 +1,11 @@
+#Backup archives
+/backups/
+*.tar.gz
+
+#Logs
+/logs/
+*.log
+
+# Temporary files
+*.tmp
+*.swp
