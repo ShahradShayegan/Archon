@@ -46,7 +46,7 @@ error() {
 
 # ---------- Validate Source Directories ----------
 
-validate_source() {
+validate_sources() {
 	VALIDATED_DIRS=()
 	for DIR in "${SOURCE_DIRS[@]}"; do
 		if [[ ! -d "$DIR" ]]; then
