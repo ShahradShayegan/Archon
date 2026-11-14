@@ -34,8 +34,15 @@ BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
 # ---------- Create Log ----------
 
 log() {
-	"[INFO] $1"
+	echo "[INFO] $1"
 }
+
+# ---------- Error Handling ----------
+
+error() {
+	echo "[ERROR] $1" >&2
+}
+
 
 # ---------- Validate Source Directories ----------
 
