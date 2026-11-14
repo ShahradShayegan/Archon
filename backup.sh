@@ -53,13 +53,15 @@ validate_sources() {
 			error "Source directiry not found: $DIR"
 			return 1
 		fi
-
-		if [[ "$DIR" == "/" ]]; then
+		
+		REAL_DIR=$(realpath -e "$DIR")
+		
+		
+		if [[ "$REAL_DIR" == "/" ]]; then
 			error "Backing up the root directory is not supported."
 			return 1
 		fi
-		
-		REAL_DIR=$(realpatch -e "$DIR")
+
 		VALIDATED_DIRS+=("$REAL_DIR")
 	done
 }
@@ -71,7 +73,7 @@ validate_sources() {
 
 create_backup_directory() {
 	mkdir -p "$BACKUP_DIR"
-	BACKUP_DIR=$(realpath -e "$BACKUO_DIR")
+	BACKUP_DIR=$(realpath -e "$BACKUP_DIR")
 }
 
 
@@ -92,7 +94,7 @@ validate_backup_location() {
 
 create_backup() {
 	log "Starting backup ..."
-	tar -czf "$BACKUP_ّFILE" -C / -- "${VALIDATED_DIRS[@]#/}"
+	tar -czf "$BACKUP_FILE" -C / -- "${VALIDATED_DIRS[@]#/}"
 	log "Backup archive created."
 }
 
@@ -128,7 +130,7 @@ main() {
 	create_backup_directory
 	validate_backup_location
 	create_backup
-	varify_backup
+	verify_backup
 
 	log "Backup Completed successfully!"
 	log "Backup fille: $BACKUP_FILE"
