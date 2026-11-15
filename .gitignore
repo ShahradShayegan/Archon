@@ -1,9 +1,9 @@
 #Backup archives
-/backups/
+/Archon_Backups/
 *.tar.gz
 
 #Logs
-/logs/
+/Archon_Logs/
 *.log
 
 # Temporary files

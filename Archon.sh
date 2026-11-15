@@ -2,9 +2,9 @@
 
 
 # ===============================
-# Linux Automated Backup
+#َ Archon
 #
-# Version: 1.0.1
+# Version: 1.1.0
 # ===============================
 #
 
@@ -12,36 +12,85 @@ set -Eeuo pipefail
 
 
 
-# ---------- Configuration ----------
 
 
-SOURCE_DIRS=(
-	"$HOME/Documents"
-	"$HOME/Downloads"
-)
-
-
-
-BACKUP_DIR="$HOME/projects/LinuxBackup/backups"
-
-DATE=$(date +"%Y-%m-%d_%H:%M:%S")
-
-BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
-
+# ---------- Colors ----------
+#
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+	RED=$'\033[0;31m'
+	GREEN=$'\033[0;32m'
+	YELLOW=$'\033[0;33m'
+	BLUE=$'\033[0;34m'
+	BOLD=$'\033[1m'
+	RESET=$'\033[0m'
+else 
+	RED=""
+	GREEN=""
+	YELLOW=""
+	BLUE=""
+	BOLD=""
+	RESET=""
+fi
 
 
 
 # ---------- Create Log ----------
 
 log() {
-	echo "[INFO] $1"
+	echo "${BLUE}[INFO]${RESET} $1"
 }
 
-# ---------- Error Handling ----------
+
+success() {
+	echo "${GREEN}[OK]${RESET} $1"
+}
+
+
+warn() {
+	echo "${YELLOW}[WARN]${RESET} $1" >&2
+}
+
 
 error() {
-	echo "[ERROR] $1" >&2
+	if [[ -t 2 && -z "${NO_COLOR:-}" ]]; then 
+		echo "${RED}[ERROR]${RESET} $1" >&2
+	else
+		echo "[ERROR] $1" >&2
+	fi
 }
+
+# ---------- Load Configuration ----------
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+CONFIG_FILE="$SCRIPT_DIR/Archon_Configs/Archon.conf"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+	error "Configuration file not found: $CONFIG_FILE"
+	exit 1
+fi
+
+source "$CONFIG_FILE"
+
+
+
+# ---------- Validate Configuration ----------
+if ! declare -p  SOURCE_DIRS >/dev/null 2>&1; then
+	error "SOURCE_DIRS is not defined in Configuration."
+	exit 1
+fi
+
+
+if [[ ${#SOURCE_DIRS[@]} == 0 ]]; then
+	error "No source directories configured."
+	exit 1
+fi
+
+: "${BACKUP_DIR:?BACKUP_DIR is not defined in configuration}"
+
+DATE=$(date +"%Y-%m-%d_%H:%M:%S")
+BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
+
+
 
 
 # ---------- Validate Source Directories ----------
@@ -63,6 +112,7 @@ validate_sources() {
 		fi
 
 		VALIDATED_DIRS+=("$REAL_DIR")
+		log "Source directory: $REAL_DIR"
 	done
 }
 
@@ -74,6 +124,7 @@ validate_sources() {
 create_backup_directory() {
 	mkdir -p "$BACKUP_DIR"
 	BACKUP_DIR=$(realpath -e "$BACKUP_DIR")
+	log "Backup directory: $BACKUP_DIR"
 }
 
 
@@ -95,7 +146,7 @@ validate_backup_location() {
 create_backup() {
 	log "Starting backup ..."
 	tar -czf "$BACKUP_FILE" -C / -- "${VALIDATED_DIRS[@]#/}"
-	log "Backup archive created."
+	success "Backup archive created."
 }
 
 
@@ -110,10 +161,10 @@ verify_backup() {
 	fi
 
 	if tar -tzf "$BACKUP_FILE" > /dev/null; then
-		log "Backup archive verified successfully."
+		success "Backup archive verified successfully."
 
 	else
-		log "Backup archive verified failed."
+		error "Backup archive verified failed."
 		return 1
 	fi
 }
@@ -132,8 +183,8 @@ main() {
 	create_backup
 	verify_backup
 
-	log "Backup Completed successfully!"
-	log "Backup fille: $BACKUP_FILE"
+	success "Backup Completed successfully!"
+	log "Backup fille: ${BOLD}$BACKUP_FILE${RESET}"
 }
 
 
