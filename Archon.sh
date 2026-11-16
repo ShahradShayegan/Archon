@@ -32,23 +32,62 @@ else
 	RESET=""
 fi
 
+# ---------- Patchs & Logs File ----------
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+LOG_DIR="$SCRIPT_DIR/Archon_Logs"
+LOG_FILE="$LOG_DIR/archon_$(date +"%Y-%m-%d".log)"
+
+if ! mkdir -p "$LOG_DIR"; then
+	echo "[ERROR] Cannot create log  directory: $LOG_DIR" >&2
+	exit 1
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ---------- Create Log ----------
+write_log() {
+	local level="$1"
+	local message="$2"
+	printf '%s [%s] %s\n' "$(date +"%Y-%m-%d %H:%M:%S")" "$level" "$message" >> "$LOG_FILE"
+}
+
+	
+
+
+
+
 
 log() {
 	echo "${BLUE}[INFO]${RESET} $1"
+	write_log "INFO" "$1"
+
 }
 
 
 success() {
 	echo "${GREEN}[OK]${RESET} $1"
+	write_log "OK" "$1"
 }
 
 
 warn() {
 	echo "${YELLOW}[WARN]${RESET} $1" >&2
+	write_log "WARN" "$1"
 }
+
 
 
 error() {
@@ -57,11 +96,12 @@ error() {
 	else
 		echo "[ERROR] $1" >&2
 	fi
+	write_log "ERROR" "$1"
 }
 
 # ---------- Load Configuration ----------
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+
 CONFIG_FILE="$SCRIPT_DIR/Archon_Configs/Archon.conf"
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
