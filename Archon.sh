@@ -2,7 +2,7 @@
 
 
 # ===============================
-#َ Archon
+# Archon
 #
 # Version: 1.1.0
 # ===============================
@@ -21,14 +21,14 @@ if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
 	GREEN=$'\033[0;32m'
 	YELLOW=$'\033[0;33m'
 	BLUE=$'\033[0;34m'
-	BOLD=$'\033[1m'
+#	BOLD=$'\033[1m'
 	RESET=$'\033[0m'
 else 
 	RED=""
 	GREEN=""
 	YELLOW=""
 	BLUE=""
-	BOLD=""
+#	BOLD=""
 	RESET=""
 fi
 
@@ -57,8 +57,9 @@ init_logging() {
 	fi
 
 	#fallback: temp directory (per user)
-	local fallback_dir="${TMPDIR:-/tmp}/Archon_Logs_$(id -u)"
-	local fallback_file="$fallback_dir/archon_$(date +"%Y-%m-%d").log"
+	local fallback_dir fallback_file
+	fallback_dir="${TMPDIR:-/tmp}/Archon_Logs_$(id -u)"
+	fallback_file="$fallback_dir/archon_$(date +"%Y-%m-%d").log"
 
 	if mkdir -p "$fallback_dir" 2>/dev/null && touch "$fallback_file" 2>/dev/null; then
 		echo "[WARN] Cannot write to $LOG_DIR. Logging to $fallback_file instead." >&2
@@ -155,7 +156,7 @@ fi
 
 
 
-DATE=$(date +"%Y-%m-%d_%H:%M:%S")
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
 
 
 
@@ -255,7 +256,7 @@ main() {
 	create_backup
 	verify_backup
 
-	success "Backup Completed successfully!"
+	success "Backup completed successfully!"
 	log "Backup file: $BACKUP_FILE"
 }
 
