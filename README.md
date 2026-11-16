@@ -130,7 +130,7 @@ tar -tzf /home/user/Archon/Archon_Backups/backup_<timestamp>.tar.gz
 - [x] Input and location validation
 - [x] Archive verification
 - [x] Colored console logs
-- [ ] Log files written to `Archon_Logs/` (created automatically)
+- [x] Log files written to `Archon_Logs/` (created automatically)
 - [ ] Configurable archive prefix and date format
 - [ ] Automatic scheduled backups (cron / systemd timer)
 - [ ] Retention policy (delete old backups automatically)
