@@ -151,6 +151,12 @@ tar -tzf /home/user/Archon/Archon_Backups/backup_<timestamp>.tar.gz
 ### 1.0.1
 - Initial release: multi-directory `tar.gz` backup with validation and verification
 
+### 1.2.0
+- Logs are saved to daily files in `Archon_Logs/` (directory created automatically)
+- Works with or without `sudo`: ownership is restored to the invoking user, with a temp-directory fallback
+- Archive filenames no longer contain `:`
+- Fixed hidden characters and typos in the script
+
 ---
 
 ## Safety Notes
