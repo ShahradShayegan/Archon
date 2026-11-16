@@ -2,7 +2,7 @@
 
 **Archon** is a simple, safe Bash script that backs up one or more directories into a compressed `tar.gz` archive and verifies the result.
 
-**Current version:** 1.1.0
+**Current version:** 1.2.0
 
 > **Status:** early development. The goal is a fully automated backup tool (scheduling, retention, compression options), built step by step.
 
@@ -84,7 +84,7 @@ BACKUP_DIR="/home/user/Archon/Archon_Backups"
 Example output:
 
 ```
-[INFO] Starting Linux Backup System.
+[INFO] Starting Archon.
 [INFO] Source directory: /home/user/documents
 [INFO] Source directory: /etc
 [INFO] Backup directory: /home/user/Archon/Archon_Backups
@@ -92,7 +92,7 @@ Example output:
 [OK] Backup archive created.
 [INFO] Verifying backup archive ...
 [OK] Backup archive verified successfully.
-[OK] Backup Completed successfully!
+[OK] Backup completed successfully!
 [INFO] Backup file: /home/user/Archon/Archon_Backups/backup_2026-11-15_14-30-05.tar.gz
 ```
 
