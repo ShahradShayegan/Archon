@@ -32,19 +32,46 @@ else
 	RESET=""
 fi
 
-# ---------- Patchs & Logs File ----------
+# ---------- Paths & Logs File ----------
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 LOG_DIR="$SCRIPT_DIR/Archon_Logs"
-LOG_FILE="$LOG_DIR/archon_$(date +"%Y-%m-%d".log)"
-
-if ! mkdir -p "$LOG_DIR"; then
-	echo "[ERROR] Cannot create log  directory: $LOG_DIR" >&2
-	exit 1
-fi
+LOG_FILE="$LOG_DIR/archon_$(date +"%Y-%m-%d").log"
 
 
 
 
+# when run via sudo, give ownership back to the real user
+fix_ownership() {
+	if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" ]]; then
+		chown -R "$SUDO_USER":"$(id -gn "$SUDO_USER")" "$@" 2>/dev/null || true 
+
+	fi
+}
+
+
+
+init_logging() {
+	if mkdir -p "$LOG_DIR" 2>/dev/null && touch "$LOG_FILE" 2>/dev/null; then
+		fix_ownership "$LOG_DIR"
+		return 0
+	fi
+
+	#fallback: temp directory (per user)
+	local fallback_dir="${TMPDIR:-/tmp}/Archon_Logs_$(id -u)"
+	local fallback_file="$fallback_dir/archon_$(date +"%Y-%m-%d").log"
+
+	if mkdir -p "$fallback_dir" 2>/dev/null && touch "$fallback_file" 2>/dev/null; then
+		echo "[WARN] Cannot write to $LOG_DIR. Logging to $fallback_file instead." >&2
+		LOG_DIR="$fallback_dir"
+		LOG_FILE="$fallback_file"
+		return 0
+	fi
+
+	echo "[WARN] File logging is disabled (no writable log location)." >&2
+	LOG_FILE=""
+}
+
+init_logging
 
 
 
@@ -59,9 +86,8 @@ fi
 
 # ---------- Create Log ----------
 write_log() {
-	local level="$1"
-	local message="$2"
-	printf '%s [%s] %s\n' "$(date +"%Y-%m-%d %H:%M:%S")" "$level" "$message" >> "$LOG_FILE"
+	[[ -n  "$LOG_FILE" ]] || return 0
+	printf '%s [%s] %s\n' "$(date +"%Y-%m-%d %H:%M:%S")" "$1" "$2" 2>/dev/null >>  "$LOG_FILE" || true
 }
 
 	
@@ -127,9 +153,9 @@ fi
 
 : "${BACKUP_DIR:?BACKUP_DIR is not defined in configuration}"
 
-DATE=$(date +"%Y-%m-%d_%H:%M:%S")
-BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
 
+
+DATE=$(date +"%Y-%m-%d_%H:%M:%S")
 
 
 
@@ -139,7 +165,7 @@ validate_sources() {
 	VALIDATED_DIRS=()
 	for DIR in "${SOURCE_DIRS[@]}"; do
 		if [[ ! -d "$DIR" ]]; then
-			error "Source directiry not found: $DIR"
+			error "Source directory not found: $DIR"
 			return 1
 		fi
 		
@@ -164,6 +190,8 @@ validate_sources() {
 create_backup_directory() {
 	mkdir -p "$BACKUP_DIR"
 	BACKUP_DIR=$(realpath -e "$BACKUP_DIR")
+	BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
+	fix_ownership "$BACKUP_DIR"
 	log "Backup directory: $BACKUP_DIR"
 }
 
@@ -173,7 +201,7 @@ create_backup_directory() {
 validate_backup_location() {
 	for DIR in "${VALIDATED_DIRS[@]}"; do
 		if [[ "$BACKUP_DIR" ==	"$DIR" || "$BACKUP_DIR" == "$DIR/"* ]]; then
-			error "Backup directory is inside asource directory: $DIR"
+			error "Backup directory is inside a source directory: $DIR"
 			return 1
 		fi
 	done
@@ -186,8 +214,12 @@ validate_backup_location() {
 create_backup() {
 	log "Starting backup ..."
 	tar -czf "$BACKUP_FILE" -C / -- "${VALIDATED_DIRS[@]#/}"
+	fix_ownership "$BACKUP_FILE"
 	success "Backup archive created."
+	
+
 }
+
 
 
 
@@ -204,7 +236,7 @@ verify_backup() {
 		success "Backup archive verified successfully."
 
 	else
-		error "Backup archive verified failed."
+		error "Backup archive verification failed."
 		return 1
 	fi
 }
@@ -215,7 +247,7 @@ verify_backup() {
 
 # ---------- Main ----------
 main() {
-	log "Starting Linux Backup System."
+	log "Starting Archon."
 	
 	validate_sources
 	create_backup_directory
@@ -224,7 +256,7 @@ main() {
 	verify_backup
 
 	success "Backup Completed successfully!"
-	log "Backup fille: ${BOLD}$BACKUP_FILE${RESET}"
+	log "Backup file: $BACKUP_FILE"
 }
 
 
