@@ -2,7 +2,7 @@
 
 **Archon** is a simple, safe Bash script that backs up one or more directories into a compressed `tar.gz` archive and verifies the result.
 
-**Current version:** 1.2.0
+**Current version:** 1.3.0
 
 > **Status:** early development. The goal is a fully automated backup tool (scheduling, retention, compression options), built step by step.
 
@@ -21,6 +21,8 @@
 - Archive verification after creation (non-empty and readable)
 - Colored, leveled console output (`INFO`, `OK`, `WARN`, `ERROR`)
 - Strict Bash mode (`set -Eeuo pipefail`) to fail fast on errors
+- Configurable archive filename prefix and timestamp format
+
 
 ---
 
@@ -57,7 +59,6 @@ chmod +x Archon.sh
 ---
 
 ## Configuration
-
 Edit `Archon_Configs/Archon.conf`:
 
 ```bash
@@ -66,12 +67,24 @@ SOURCE_DIRS=("/home/user/documents" "/etc")
 
 # Where backup archives will be stored
 BACKUP_DIR="/home/user/Archon/Archon_Backups"
+
+# Optional: archive filename prefix (letters, digits, . _ - only)
+BACKUP_PREFIX="backup"
+
+# Optional: timestamp format used in the filename (see `man date`)
+DATE_FORMAT="%Y-%m-%d_%H-%M-%S"
 ```
 
-| Variable      | Required | Description                                      |
-|---------------|----------|--------------------------------------------------|
-| `SOURCE_DIRS` | Yes      | Bash array of directories to include in the backup |
-| `BACKUP_DIR`  | Yes      | Destination directory for the archive            |
+| Variable        | Required | Default               | Description                                        |
+|-----------------|----------|-----------------------|----------------------------------------------------|
+| `SOURCE_DIRS`   | Yes      | -                     | Bash array of directories to include in the backup |
+| `BACKUP_DIR`    | Yes      | -                     | Destination directory for the archive              |
+| `BACKUP_PREFIX` | No       | `backup`              | Prefix of the archive filename                     |
+| `DATE_FORMAT`   | No       | `%Y-%m-%d_%H-%M-%S`   | `date` format for the timestamp in the filename    |
+
+The archive is named `<BACKUP_PREFIX>_<timestamp>.tar.gz`, for example `docs_20261118.tar.gz`. Invalid values (such as a prefix containing `/`) are rejected before anything is written.
+
+
 
 ---
 
@@ -131,7 +144,7 @@ tar -tzf /home/user/Archon/Archon_Backups/backup_<timestamp>.tar.gz
 - [x] Archive verification
 - [x] Colored console logs
 - [x] Log files written to `Archon_Logs/` (created automatically)
-- [ ] Configurable archive prefix and date format
+- [x] Configurable archive prefix and date format
 - [ ] Automatic scheduled backups (cron / systemd timer)
 - [ ] Retention policy (delete old backups automatically)
 - [ ] Exclude patterns
@@ -156,6 +169,12 @@ tar -tzf /home/user/Archon/Archon_Backups/backup_<timestamp>.tar.gz
 - Works with or without `sudo`: ownership is restored to the invoking user, with a temp-directory fallback
 - Archive filenames no longer contain `:`
 - Fixed hidden characters and typos in the script
+
+### 1.3.0
+- Added optional `BACKUP_PREFIX` and `DATE_FORMAT` settings to the config file
+- Both values are validated; the defaults keep the previous filename format
+
+
 
 ---
 

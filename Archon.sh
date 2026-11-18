@@ -4,7 +4,7 @@
 # ===============================
 # Archon
 #
-# Version: 1.1.0
+# Version: 1.3.0
 # ===============================
 #
 
@@ -156,7 +156,29 @@ fi
 
 
 
-DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+
+
+# ---------- Date & Prefix Format ----------
+
+
+
+BACKUP_PREFIX="${BACKUP_PREFIX:-backup}"
+DATE_FORMAT="${DATE_FORMAT:-%Y-%m-%d_%H-%M-%S}"
+
+
+if [[ ! "$BACKUP_PREFIX" =~ ^[A-Za-z0-9._-]+$ ]]; then
+	error "BACKUP_PREFIX may only contain letters, digits, '.', '_', and '-': $BACKUP_PREFIX"
+	exit 1
+fi 
+
+DATE=$(date +"$DATE_FORMAT")
+if [[ -z "$DATE" || "$DATE" =~ [[:space:]/] ]]; then
+	error "DATE_FORMAT producs an invalid filename part: $DATE_FORMAT"
+	exit 1
+fi
+
+
+
 
 
 
@@ -191,7 +213,7 @@ validate_sources() {
 create_backup_directory() {
 	mkdir -p "$BACKUP_DIR"
 	BACKUP_DIR=$(realpath -e "$BACKUP_DIR")
-	BACKUP_FILE="$BACKUP_DIR/backup_$DATE.tar.gz"
+	BACKUP_FILE="$BACKUP_DIR/${BACKUP_PREFIX}_$DATE.tar.gz"
 	fix_ownership "$BACKUP_DIR"
 	log "Backup directory: $BACKUP_DIR"
 }
