@@ -4,7 +4,7 @@
 # ===============================
 # Archon
 #
-# Version: 1.3.0
+# Version: 1.4.0
 # ===============================
 #
 
@@ -173,9 +173,26 @@ fi
 
 DATE=$(date +"$DATE_FORMAT")
 if [[ -z "$DATE" || "$DATE" =~ [[:space:]/] ]]; then
-	error "DATE_FORMAT producs an invalid filename part: $DATE_FORMAT"
+	error "DATE_FORMAT produces an invalid filename part: $DATE_FORMAT"
 	exit 1
 fi
+
+
+# ---------- Keep Last Check ----------
+
+KEEP_LAST="${KEEP_LAST:-0}"
+
+if [[ ! "$KEEP_LAST" =~ ^[0-9]+$ ]]; then
+	error "KEEP_LAST must be a non-negative integer: $KEEP_LAST"
+	exit 1
+
+fi
+
+
+KEEP_LAST=$((10#$KEEP_LAST))
+
+
+
 
 
 
@@ -211,10 +228,19 @@ validate_sources() {
 # ---------- Create Backup Directory ----------
 
 create_backup_directory() {
+	local created=0
+	[[ -d "$BACKUP_DIR" ]] || created=1
+
+
 	mkdir -p "$BACKUP_DIR"
 	BACKUP_DIR=$(realpath -e "$BACKUP_DIR")
 	BACKUP_FILE="$BACKUP_DIR/${BACKUP_PREFIX}_$DATE.tar.gz"
-	fix_ownership "$BACKUP_DIR"
+
+ 	# only change ownership of a directory we just created
+	if [[ $created -eq 1 ]]; then 
+		fix_ownership "$BACKUP_DIR"
+	fi
+
 	log "Backup directory: $BACKUP_DIR"
 }
 
@@ -265,6 +291,52 @@ verify_backup() {
 }
 
 
+# ---------- Apply Retention ----------
+
+apply_retention() {
+	[[ "$KEEP_LAST" -gt 0 ]] || return 0
+
+	log "Retention: keeping the newest $KEEP_LAST archives named ${BACKUP_PREFIX}_*.tar.gz"
+
+	local entry file count=0 removed=0
+
+	while IFS= read -r -d '' entry; do
+		file="${entry#* }"
+		count=$((count + 1))
+
+
+		[[ $count -gt $KEEP_LAST ]] || continue
+		[[ "$file" != "$BACKUP_FILE" ]] || continue     # never delete the new archive
+
+
+		if rm -f -- "$file"; then
+			log "Removed old backup: $file"
+			removed=$((removed + 1))
+
+		else
+			warn "Could not remove old backup: $file"
+
+		fi
+	done < <(find "$BACKUP_DIR" -maxdepth 1 -type f -name "${BACKUP_PREFIX}_*.tar.gz" -printf '%T@ %p\0' | sort -z -rn)
+
+	log "Retention finished: $removed removed"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -277,6 +349,7 @@ main() {
 	validate_backup_location
 	create_backup
 	verify_backup
+	apply_retention
 
 	success "Backup completed successfully!"
 	log "Backup file: $BACKUP_FILE"
