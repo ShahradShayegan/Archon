@@ -120,3 +120,72 @@ else
 fi
 
 
+
+# ---------- Terminal Handling ---------
+IN_TUI=0
+STTY_SAVED=""
+
+# it will wave e terminal config and get terminal ready for Terminal User Interface
+term_eneter() {
+    STTY_SAVED="$(stty -g 2>/dev/null)"
+    stty -echo 2>/dev/null
+    printf '%s' "${ESC}[?1049h${ESC}[?25l"
+    IN_TUI=1
+}
+
+
+term_leave() {
+    printf '%s' "${C_RESET}${ESC}[?25h${ESC}[?1049l"
+    if [[ -n "$STTY_SAVED" ]]; then
+        stty "$STTY_SAVED" 2>/dev/null
+    else
+        stty echo 2>/dev/null
+    fi
+    IN_TUI=0
+}
+
+
+clean_up() {
+    if (( IN_TUI )); then
+        term_leave
+    fi       
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT TERM HUP
+
+
+ROWS=24
+COLS=80
+
+
+
+get_size() {
+    local sz
+    sz="$(stty size 2>/dev/null)"
+    if [[ "$sz" =~ ^([0-9]+)\ ([0-9]+)$ ]]; then
+    ROWS="${BASH_REMATCH[1]}"
+    COLS="${BASH_REMATCH[2]}"
+    fi
+
+}
+
+
+
+# Fixed-width box
+
+BOX_W=72
+TW=68
+
+calc_layout() {
+    get_size
+    BOX_W=72
+    if (( BOX_W > COLS - 4 )); then
+        BOX_W=$(( COLS - 4))
+    fi
+    TW=$(( BOX_W - 4))
+}
+
+
+
+# ---------- String helpers (results are returned in REPLY) ----------
