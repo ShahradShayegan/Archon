@@ -67,6 +67,8 @@ ARCHON_VERSION="${ARCHON_VERSION:-?}"
 
 
 
+# ---------- Home Diretory of the real users (also when they start with sudo) ----------
+
 
 # if the user was root and use sudo then it will find the user data in passwd and it will get the home dir of that user
 # else REAL_NAME is eq $HOME or /
@@ -79,5 +81,42 @@ else
 fi
 [[ -d "$REAL_HOME" ]] || REAL_HOME="/"
 
+
+
+# ---------- Colors and Box Characters ----------
+
+ESC=$'\e'
+C_RESET="${ESC}[0m"
+
+if [[ -z "${NO_COLOR:-}" ]]; then
+	C_SCREEN="${ESC}[0;97;44m"        # white on blue (screen background)
+	C_BOX="${ESC}[0;30;47m"           # black on white (menu box)
+	C_TITLE_DEFAULT="${ESC}[1;34;47m" # bold blue on white
+	C_TITLE_ERR="${ESC}[1;31;47m"     # bold red on white
+	C_TITLE_OK="${ESC}[1;32;47m"      # bold green on white
+	C_SEL="${ESC}[1;97;44m"           # bold white on blue (selected row)
+	C_INPUT="${ESC}[1;30;46m"         # bold black on cyan (input field)
+	C_SHADOW="${ESC}[0;30;40m"        # black (drop shadow)
+
+else
+	C_SCREEN=""
+	C_BOX=""
+	C_TITLE_DEFAULT="${ESC}[1m"
+	C_TITLE_ERR="${ESC}[1m"
+	C_TITLE_OK="${ESC}[1m"
+	C_SEL="${ESC}[7m"
+	C_INPUT="${ESC}[4m"
+	C_SHADOW=""
+fi
+
+TITLE_COLOR="$C_TITLE_DEFAULT"
+
+
+# for this i use AI but it will make a border for Title.
+if [[ "${LC_ALL:-${LC_CTYPE:-${LANG:-}}}" =~ [Uu][Tt][Ff]-?8 ]]; then
+	B_TL='╔'; B_TR='╗'; B_BL='╚'; B_BR='╝'; B_H='═'; B_V='║'; B_ML='╠'; B_MR='╣'; MARK='▶'
+else
+	B_TL='+'; B_TR='+'; B_BL='+'; B_BR='+'; B_H='-'; B_V='|'; B_ML='+'; B_MR='+'; MARK='>'
+fi
 
 
