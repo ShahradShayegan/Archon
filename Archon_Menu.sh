@@ -190,6 +190,9 @@ calc_layout() {
 
 # ---------- String helpers (results are returned in REPLY) ----------
 
+
+
+# make spaces 
 spaces() {
     local n="$1"
     (( n < 0 )) && '%*s' "$n" ''
@@ -199,10 +202,19 @@ spaces() {
 
 
 
+# Truncate if a lengh of string get more than a specific  lengh if will short that
+
 trunc() {
+    
+    
+    
     REPLY="$1"
+    
     local w="$2"
     (( w < 1 )) && w=1
+    
+    
+    
     if (( ${#REPLY} > w )); then
         if (( w > 3 )); then
             REPLY="${REPLY:0:w-3}..."
@@ -214,9 +226,56 @@ trunc() {
 }
 
 
+
+# Pad Right fill text in right with space for sorting columns 
 padr() {
 	local s="$1" n=$(( $2 - ${#1} ))
 	spaces "$n"
 	REPLY="$s$REPLY"
 }
 
+
+
+# shorten a path from the left
+fit_path() {
+
+
+	
+    REPLY="$1"
+	
+    local w="$2"
+	(( w < 1 )) && w=1
+	if (( ${#REPLY} > w )); then
+		if (( w > 3 )); then
+			REPLY="...${REPLY: -$(( w - 3 ))}"
+		else
+			REPLY="${REPLY: -$w}"
+		fi
+	fi
+}
+
+
+
+shq() {
+	if [[ "$1" == *[\"\$\`\\]* || "$1" == *$'\n'* ]]; then
+		printf '%q' "$1"
+	else
+		printf '"%s"' "$1"
+	fi
+}
+
+
+
+normalize_path() {
+	local p="$1"
+	p="${p/#\~/$REAL_HOME}"
+	[[ "$p" == /* ]] || p="$PWD/$p"
+	realpath -m -- "$p"
+}
+
+
+fix_owner() {
+	if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" ]]; then
+		chown "$SUDO_USER":"$(id -gn "$SUDO_USER")" "$@" 2>/dev/null || true
+	fi
+}
