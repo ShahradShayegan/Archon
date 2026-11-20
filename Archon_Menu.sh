@@ -189,3 +189,34 @@ calc_layout() {
 
 
 # ---------- String helpers (results are returned in REPLY) ----------
+
+spaces() {
+    local n="$1"
+    (( n < 0 )) && '%*s' "$n" ''
+    printf -v REPLY '%*s' "$n" ''
+
+}
+
+
+
+trunc() {
+    REPLY="$1"
+    local w="$2"
+    (( w < 1 )) && w=1
+    if (( ${#REPLY} > w )); then
+        if (( w > 3 )); then
+            REPLY="${REPLY:0:w-3}..."
+        else
+            REPLY="${REPLY:0:w}"
+        fi
+    fi
+
+}
+
+
+padr() {
+	local s="$1" n=$(( $2 - ${#1} ))
+	spaces "$n"
+	REPLY="$s$REPLY"
+}
+
