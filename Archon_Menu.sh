@@ -272,3 +272,10 @@ normalize_path() {
 	[[ "$p" == /* ]] || p="$PWD/$p"
 	realpath -m -- "$p"
 }
+
+
+fix_owner() {
+	if [[ $EUID -eq 0 && -n "${SUDO_USER:-}" ]]; then
+		chown "$SUDO_USER":"$(id -gn "$SUDO_USER")" "$@" 2>/dev/null || true
+	fi
+}
