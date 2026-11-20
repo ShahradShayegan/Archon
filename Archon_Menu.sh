@@ -30,3 +30,12 @@ LOG_DIR="$SCRIPT_DIR/Archon_Logs"
 
 
 
+# if bash is older than 4 it get error
+
+if (( BASH_VERSINFO[0] < 4 )); then
+    echo "[ERROR] Archon Menu needs Bash 4 or newer." >&2
+    exit 1
+
+fi
+
+
